@@ -7,11 +7,16 @@ import { Event } from '../types/index';
 
 class TelemetryService {
   private ws: WebSocket | null = null;
-  private url: string = 'ws://localhost:8080/ws';
+  private url: string;
   private eventQueue: Event[] = [];
   private isConnecting: boolean = false;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 10;
+  private static readonly MAX_QUEUE_SIZE = 100;
+
+  constructor(url: string = 'ws://localhost:8080/ws') {
+    this.url = url;
+  }
 
   /**
    * Sends an event to the telemetry backend.
@@ -21,6 +26,10 @@ class TelemetryService {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.transmit(event);
     } else {
+      if (this.eventQueue.length >= TelemetryService.MAX_QUEUE_SIZE) {
+        this.eventQueue.shift();
+        console.warn('[TelemetryService] Queue full, dropping oldest event');
+      }
       this.eventQueue.push(event);
       this.connect();
     }
