@@ -7,29 +7,36 @@ import { CyclePhase } from '../types/index';
 
 /**
  * Calculate which phase user is in based on cycle day
- * @param dayOfCycle 1-based day of cycle (1-28 for standard cycle)
+ * @param dayOfCycle 1-based day of cycle
  * @param cycleLength total cycle length in days
  * @returns CyclePhase
  *
- * Standard cycle breakdown:
+ * Standard cycle breakdown (approximate):
  * - Menstruation: Days 1-5
- * - Follicular: Days 6-13
- * - Ovulation: Days 14-16 (peak around day 14)
- * - Luteal: Days 17-28
+ * - Follicular: Days 6 to ~48% of cycle
+ * - Ovulation: ~48% to ~58% of cycle
+ * - Luteal: Remaining days
  */
 export function calculatePhase(dayOfCycle: number, cycleLength: number): CyclePhase {
-  // Normalize to percentage through cycle
-  const percentThroughCycle = dayOfCycle / cycleLength;
+  // Normalize dayOfCycle to be within [1, cycleLength] to handle out-of-bounds inputs
+  const normalizedDay = ((dayOfCycle - 1) % cycleLength + cycleLength) % cycleLength + 1;
 
-  if (dayOfCycle >= 1 && dayOfCycle <= 5) {
+  if (normalizedDay <= 5) {
     return CyclePhase.MENSTRUATION;
-  } else if (dayOfCycle > 5 && dayOfCycle <= Math.floor(cycleLength * 0.48)) {
-    return CyclePhase.FOLLICULAR;
-  } else if (dayOfCycle > Math.floor(cycleLength * 0.48) && dayOfCycle <= Math.floor(cycleLength * 0.58)) {
-    return CyclePhase.OVULATION;
-  } else {
-    return CyclePhase.LUTEAL;
   }
+
+  const ovulationStart = Math.floor(cycleLength * 0.48);
+  const ovulationEnd = Math.floor(cycleLength * 0.58);
+
+  if (normalizedDay > ovulationStart && normalizedDay <= ovulationEnd) {
+    return CyclePhase.OVULATION;
+  }
+
+  if (normalizedDay > 5 && normalizedDay <= ovulationStart) {
+    return CyclePhase.FOLLICULAR;
+  }
+
+  return CyclePhase.LUTEAL;
 }
 
 /**
@@ -44,13 +51,17 @@ export function calculateDayOfCycle(
   lastPeriodStartDate: Date,
   cycleLength: number
 ): number {
-  const daysSinceLastPeriod = Math.floor(
-    (new Date(date).getTime() - new Date(lastPeriodStartDate).getTime()) / (1000 * 60 * 60 * 24)
-  );
+  // Normalize to UTC midnight to avoid Daylight Savings Time (DST) issues
+  const d1 = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  const d2 = Date.UTC(lastPeriodStartDate.getFullYear(), lastPeriodStartDate.getMonth(), lastPeriodStartDate.getDate());
   
-  // Modulo to handle cycles extending beyond current observation
-  const dayOfCycle = (daysSinceLastPeriod % cycleLength) + 1;
-  return Math.max(1, dayOfCycle);
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysSinceLastPeriod = Math.floor((d1 - d2) / msPerDay);
+  
+  // Use a robust modulo to handle negative days (dates before last period start)
+  // and ensure the result is always a valid 1-based day of the cycle.
+  const normalizedDays = ((daysSinceLastPeriod % cycleLength) + cycleLength) % cycleLength;
+  return normalizedDays + 1;
 }
 
 /**
