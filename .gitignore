@@ -32,3 +32,12 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Keep local docs and config out of repo
+AWS_AUDIT_AND_SHUTDOWN.md
+COMPLETION_REPORT.md
+EXECUTION_SUMMARY.md
+FINAL_AUDIT_REPORT.md
+QUICK_REFERENCE.txt
+README.md
+.vscode/
