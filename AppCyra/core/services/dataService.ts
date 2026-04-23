@@ -22,6 +22,7 @@ import {
   CyclePhase,
 } from '../types/index';
 import { calculateDayOfCycle, calculatePhase } from '../utils/cycleCalculations';
+import { telemetryService } from './telemetryService';
 
 // ============================================================================
 // MOCK DATA STORE (In-memory for now, swappable with AsyncStorage/DB)
@@ -117,7 +118,9 @@ export class DataService {
     }
 
     // Create new cycle based on last period date
-    if (!userProfile) throw new Error('User profile not initialized');
+    if (!userProfile) {
+      throw new Error(`[DataService] Failed to get current cycle: User profile is not initialized for user ${userId}`);
+    }
 
     const newCycle: Cycle = {
       id: this._generateId(),
@@ -271,6 +274,10 @@ export class DataService {
    */
   static async logEvent(event: Event): Promise<void> {
     events.push(event);
+    // Stream event to telemetry backend
+    telemetryService.sendEvent(event).catch((err) =>
+      console.error('[DataService] Failed to send telemetry event:', err)
+    );
   }
 
   /**

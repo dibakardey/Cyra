@@ -1,0 +1,50 @@
+# CodeRabbit Configuration
+
+## Overview
+This configuration optimizes CodeRabbit for the Cyra project, focusing on high-quality code analysis for the core application logic while minimizing noise from static assets and configuration files.
+
+## Scopes & Filtering
+
+### 🎯 High Priority (Deep Analysis)
+These directories contain the core business logic and domain models. CodeRabbit should provide deep, architectural, and logic-based feedback here.
+- `AppCyra/core/**` (Services, Types, Utils)
+- `AppCyra/app/**` (UI Components, Routing, Screens)
+
+### 🛡️ Low Priority (Surface Analysis)
+These files are mostly configuration or static assets. CodeRabbit should only flag critical errors or major structural issues.
+- `AppCyra/assets/**`
+- `AppCyra/app.json`
+- `tsconfig.json`
+- `.gitignore`
+- `package.json`
+
+### 🚫 Ignored (No Analysis)
+These files should be completely ignored to reduce noise and prevent unnecessary review cycles.
+- `AppCyra/.expo/**`
+- `AppCyra/dist/**`
+- `AppCyra/.env`
+- `node_modules/**`
+- `*.log`
+
+## Review Guidelines
+
+### 💎 Code Quality Standards
+When reviewing `AppCyra/core/`, prioritize the following:
+- **Type Safety:** Ensure strict TypeScript usage. Flag any use of `any` or unsafe type assertions.
+- **Domain Integrity:** Verify that domain models in `core/types/` are used consistently and that logic in `core/services/` adheres to the established DataService abstraction.
+- **Pure Functions:** Ensure utility functions in `core/utils/` remain pure and side-effect free.
+- **Error Handling:** Check for robust error handling in all asynchronous service calls.
+
+### 🎨 UI & UX Standards
+When reviewing `AppCyra/app/`, prioritize:
+- **Component Modularity:** Flag overly large components that should be broken down.
+- **Performance:** Identify unnecessary re-renders or heavy computations within the render cycle.
+- **Consistency:** Ensure adherence to the established design patterns (e.g., use of `SafeAreaView`, consistent styling).
+
+### 📝 Documentation & Comments
+- Encourage meaningful comments for complex logic in `core/`.
+- Flag missing documentation for new exported functions or interfaces.
+
+## Automation Instructions
+- **Auto-Fixing:** If a suggestion is a simple syntax fix or a minor type correction, CodeRabbit is encouraged to propose the fix directly.
+- **Complexity Threshold:** For complex architectural changes, provide a detailed rationale and suggest a refactoring plan rather than just pointing out the issue.
